@@ -73,18 +73,30 @@ func (ch *Channel) connected(conn *amqp.Connection) error {
 		return err
 	}
 	ch.ch = channel
-
+	
 	for _, spec := range ch.exchangeDeclareSpecs {
-		ch.applyExchangeDeclareSpec(spec)
+		err := ch.applyExchangeDeclareSpec(spec)
+		if err != nil {
+			return err
+		}
 	}
 	for _, spec := range ch.queueDeclareSpecs {
-		ch.applyQueueDeclareSpec(spec)
+		err := ch.applyQueueDeclareSpec(spec)
+		if err != nil {	
+			return err
+		}
 	}
 	for _, spec := range ch.queueBindSpecs {
-		ch.applyQueueBindSpec(spec)
+		err := ch.applyQueueBindSpec(spec)
+		if err != nil {	
+			return err
+		}
 	}
 	for _, spec := range ch.consumeSpecs {
-		ch.applyConsumeSpec(spec)
+		err := ch.applyConsumeSpec(spec)
+		if err != nil {	
+			return err
+		}
 	}
 
 	return nil
@@ -94,40 +106,46 @@ func (ch *Channel) disconnected() {
 	ch.ch = nil
 }
 
-func (ch *Channel) applyExchangeDeclareSpec(spec exchangeDeclareSpec) {
+func (ch *Channel) applyExchangeDeclareSpec(spec exchangeDeclareSpec) error {
 	err := ch.ch.ExchangeDeclare(spec.name, spec.kind, spec.durable, spec.autoDelete, spec.internal, spec.noWait, spec.args)
 	if err != nil && spec.errorChan != nil {
 		spec.errorChan <- err
+		return err
 	}
+	return nil
 }
 
-func (ch *Channel) applyQueueDeclareSpec(spec queueDeclareSpec) {
+func (ch *Channel) applyQueueDeclareSpec(spec queueDeclareSpec) error {
 	queue, err := ch.ch.QueueDeclare(spec.name, spec.durable, spec.autoDelete, spec.exclusive, spec.noWait, spec.args)
 	if err != nil && spec.errorChan != nil {
 		spec.errorChan <- err
-		return
+		return err
 	}
 	if spec.queueChan != nil {
 		spec.queueChan <- queue
 	}
+	return nil
 }
 
-func (ch *Channel) applyQueueBindSpec(spec queueBindSpec) {
+func (ch *Channel) applyQueueBindSpec(spec queueBindSpec) error {
 	err := ch.ch.QueueBind(spec.name, spec.key, spec.exchange, spec.noWait, spec.args)
 	if err != nil && spec.errorChan != nil {
 		spec.errorChan <- err
+		return err
 	}
+	return nil
 }
 
-func (ch *Channel) applyConsumeSpec(spec consumeSpec) {
+func (ch *Channel) applyConsumeSpec(spec consumeSpec) error {
 	deliveries, err := ch.ch.Consume(spec.queue, spec.consumer, spec.autoAck, spec.exclusive, spec.noLocal, spec.noWait, spec.args)
 	if err != nil && spec.errorChan != nil {
 		spec.errorChan <- err
-		return
+		return err
 	}
 	if spec.deliveryChan != nil {
 		go shovel(deliveries, spec.deliveryChan)
 	}
+	return nil
 }
 
 // Consume immediately starts delivering queued messages.

@@ -1,6 +1,7 @@
 package chamqp
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -50,12 +51,18 @@ func (c *Connection) connect(url string) error {
 	if err != nil {
 		return err
 	}
-	c.conn = conn
+	
 
 	for _, ctx := range c.channels {
-		ctx.connected(c.conn)
+		chanErr := ctx.connected(conn)
+		if chanErr != nil {
+			fmt.Println("error during channel (re)construction")
+			return chanErr
+		}
 	}
 
+	c.conn = conn
+	
 	return nil
 }
 
