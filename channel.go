@@ -7,62 +7,63 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type consumeSpec struct {
-	queue     string
-	consumer  string
-	autoAck   bool
-	exclusive bool
-	noLocal   bool
-	noWait    bool
-	args      amqp.Table
+type ConsumeSpec struct {
+	Queue     string
+	Consumer  string
+	DeliveryChan chan<- amqp.Delivery
+	
+	AutoAck   bool
+	Exclusive bool
+	NoLocal   bool
+	NoWait    bool
+	Args      amqp.Table
+	ErrorChan    chan<- error
 
-	deliveryChan chan<- amqp.Delivery
-	errorChan    chan<- error
 }
 
-type exchangeDeclareSpec struct {
-	name       string
-	kind       string
-	durable    bool
-	autoDelete bool
-	internal   bool
-	noWait     bool
-	args       amqp.Table
+type ExchangeDeclareSpec struct {
+	Name       string
+	Kind       string
+	Durable    bool
+	AutoDelete bool
+	Internal   bool
+	NoWait     bool
+	Args       amqp.Table
 
-	errorChan chan<- error
+	ErrorChan chan<- error
 }
 
-type queueBindSpec struct {
-	name     string
-	key      string
-	exchange string
-	noWait   bool
-	args     amqp.Table
+type QueueBindSpec struct {
+	Name     string
+	Key      string
+	Exchange string
+	NoWait   bool
+	Args     amqp.Table
 
-	errorChan chan<- error
+	ErrorChan chan<- error
 }
 
-type queueDeclareSpec struct {
-	name       string
-	durable    bool
-	autoDelete bool
-	exclusive  bool
-	noWait     bool
-	args       amqp.Table
+type QueueDeclareSpec struct {
+	Name       string
+	Durable    bool
+	AutoDelete bool
+	Exclusive  bool
+	NoWait     bool
+	Args       amqp.Table
 
-	queueChan chan<- amqp.Queue
-	errorChan chan<- error
+	QueueChan chan<- amqp.Queue
+	ErrorChan chan<- error
 }
 
 // Channel represents an AMQP channel. Used as a context for valid message
-// exchange. Errors on methods with this Channel will be detected and the
+// Exchange. Errors on methods with this Channel will be detected and the
 // channel will recreate itself.
 type Channel struct {
 	ch                   *amqp.Channel
-	consumeSpecs         []consumeSpec
-	exchangeDeclareSpecs []exchangeDeclareSpec
-	queueBindSpecs       []queueBindSpec
-	queueDeclareSpecs    []queueDeclareSpec
+	consumeSpecs         []ConsumeSpec
+	exchangeDeclareSpecs []ExchangeDeclareSpec
+	queueBindSpecs       []QueueBindSpec
+	queueDeclareSpecs    []QueueDeclareSpec
 	mu                   sync.Mutex
 }
 
@@ -106,59 +107,63 @@ func (ch *Channel) disconnected() {
 	ch.ch = nil
 }
 
-func (ch *Channel) applyExchangeDeclareSpec(spec exchangeDeclareSpec) error {
-	err := ch.ch.ExchangeDeclare(spec.name, spec.kind, spec.durable, spec.autoDelete, spec.internal, spec.noWait, spec.args)
-	if err != nil && spec.errorChan != nil {
-		spec.errorChan <- err
+func (ch *Channel) applyExchangeDeclareSpec(spec ExchangeDeclareSpec) error {
+	err := ch.ch.ExchangeDeclare(spec.Name, spec.Kind, spec.Durable, spec.AutoDelete, spec.Internal, spec.NoWait, spec.Args)
+	if err != nil && spec.ErrorChan != nil {
+		spec.ErrorChan <- err
 		return err
 	}
 	return nil
 }
 
-func (ch *Channel) applyQueueDeclareSpec(spec queueDeclareSpec) error {
-	queue, err := ch.ch.QueueDeclare(spec.name, spec.durable, spec.autoDelete, spec.exclusive, spec.noWait, spec.args)
-	if err != nil && spec.errorChan != nil {
-		spec.errorChan <- err
+func (ch *Channel) applyQueueDeclareSpec(spec QueueDeclareSpec) error {
+	queue, err := ch.ch.QueueDeclare(spec.Name, spec.Durable, spec.AutoDelete, spec.Exclusive, spec.NoWait, spec.Args)
+	if err != nil && spec.ErrorChan != nil {
+		spec.ErrorChan <- err
 		return err
 	}
-	if spec.queueChan != nil {
-		spec.queueChan <- queue
+	if spec.QueueChan != nil {
+		spec.QueueChan <- queue
 	}
 	return nil
 }
 
-func (ch *Channel) applyQueueBindSpec(spec queueBindSpec) error {
-	err := ch.ch.QueueBind(spec.name, spec.key, spec.exchange, spec.noWait, spec.args)
-	if err != nil && spec.errorChan != nil {
-		spec.errorChan <- err
+func (ch *Channel) applyQueueBindSpec(spec QueueBindSpec) error {
+	err := ch.ch.QueueBind(spec.Name, spec.Key, spec.Exchange, spec.NoWait, spec.Args)
+	if err != nil && spec.ErrorChan != nil {
+		spec.ErrorChan <- err
 		return err
 	}
 	return nil
 }
 
-func (ch *Channel) applyConsumeSpec(spec consumeSpec) error {
-	deliveries, err := ch.ch.Consume(spec.queue, spec.consumer, spec.autoAck, spec.exclusive, spec.noLocal, spec.noWait, spec.args)
-	if err != nil && spec.errorChan != nil {
-		spec.errorChan <- err
+func (ch *Channel) applyConsumeSpec(spec ConsumeSpec) error {
+	deliveries, err := ch.ch.Consume(spec.Queue, spec.Consumer, spec.AutoAck, spec.Exclusive, spec.NoLocal, spec.NoWait, spec.Args)
+	if err != nil && spec.ErrorChan != nil {
+		spec.ErrorChan <- err
 		return err
 	}
-	if spec.deliveryChan != nil {
-		go shovel(deliveries, spec.deliveryChan)
+	if spec.DeliveryChan != nil {
+		go shovel(deliveries, spec.DeliveryChan)
 	}
 	return nil
+}
+
+func (ch *Channel) ConsumeWithSpec(spec ConsumeSpec) {
+	ch.Consume(spec.Queue, spec.Consumer, spec.AutoAck, spec.Exclusive, spec.NoLocal, spec.NoWait, spec.Args, spec.DeliveryChan, spec.ErrorChan)
 }
 
 // Consume immediately starts delivering queued messages.
 func (ch *Channel) Consume(queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args amqp.Table, deliveryChan chan<- amqp.Delivery, errorChan chan<- error) {
-	spec := consumeSpec{
+	spec := ConsumeSpec{
 		queue,
 		consumer,
+		deliveryChan,
 		autoAck,
 		exclusive,
 		noLocal,
 		noWait,
 		args,
-		deliveryChan,
 		errorChan,
 	}
 	ch.consumeSpecs = append(ch.consumeSpecs, spec)
@@ -167,7 +172,7 @@ func (ch *Channel) Consume(queue, consumer string, autoAck, exclusive, noLocal, 
 	}
 }
 
-// Publish sends a Publishing from the client to an exchange on the server.
+// Publish sends a Publishing from the client to an Exchange on the server.
 func (ch *Channel) Publish(exchange, key string, mandatory, immediate bool, msg amqp.Publishing) error {
 	if ch.ch == nil {
 		return fmt.Errorf("context has no channel")
@@ -176,11 +181,15 @@ func (ch *Channel) Publish(exchange, key string, mandatory, immediate bool, msg 
 	return ch.ch.Publish(exchange, key, mandatory, immediate, msg)
 }
 
-// ExchangeDeclare declares an exchange on the server. If the exchange does not
-// already exist, the server will create it. If the exchange exists, the server
+func (ch *Channel) ExchangeDeclareWithSpec(spec ExchangeDeclareSpec) {
+	ch.ExchangeDeclare(spec.Name, spec.Kind, spec.Durable, spec.AutoDelete, spec.Internal, spec.NoWait, spec.Args, spec.ErrorChan)
+}
+
+// ExchangeDeclare declares an Exchange on the server. If the Exchange does not
+// already exist, the server will create it. If the Exchange exists, the server
 // verifies that it is of the provided type, durability and auto-delete flags.
 func (ch *Channel) ExchangeDeclare(name, kind string, durable, autoDelete, internal, noWait bool, args amqp.Table, errorChan chan<- error) {
-	spec := exchangeDeclareSpec{
+	spec := ExchangeDeclareSpec{
 		name,
 		kind,
 		durable,
@@ -196,11 +205,15 @@ func (ch *Channel) ExchangeDeclare(name, kind string, durable, autoDelete, inter
 	}
 }
 
-// QueueBind binds an exchange to a queue so that publishings to the exchange
-// will be routed to the queue when the publishing routing key matches the
-// binding routing key.
+func (ch *Channel) QueueBindWithSpec(q QueueBindSpec) {
+	ch.QueueBind(q.Name, q.Key, q.Exchange, q.NoWait, q.Args, q.ErrorChan)	
+}
+
+// QueueBind binds an Exchange to a Queue so that publishings to the Exchange
+// will be routed to the Queue when the publishing routing Key matches the
+// binding routing Key.
 func (ch *Channel) QueueBind(name, key, exchange string, noWait bool, args amqp.Table, errorChan chan<- error) {
-	spec := queueBindSpec{
+	spec := QueueBindSpec{
 		name,
 		key,
 		exchange,
@@ -214,11 +227,15 @@ func (ch *Channel) QueueBind(name, key, exchange string, noWait bool, args amqp.
 	}
 }
 
-// QueueDeclare declares a queue to hold messages and deliver to consumers.
-// Declaring creates a queue if it doesn't already exist, or ensures that an
-// existing queue matches the same parameters.
+
+func (ch *Channel) QueueDeclareWithSpec(q QueueDeclareSpec) {
+	ch.QueueDeclare(q.Name, q.Durable, q.AutoDelete, q.Exclusive, q.NoWait, q.Args, q.QueueChan, q.ErrorChan)
+}
+// QueueDeclare declares a Queue to hold messages and deliver to consumers.
+// Declaring creates a Queue if it doesn't already exist, or ensures that an
+// existing Queue matches the same parameters.
 func (ch *Channel) QueueDeclare(name string, durable, autoDelete, exclusive, noWait bool, args amqp.Table, queueChan chan<- amqp.Queue, errorChan chan<- error) {
-	spec := queueDeclareSpec{
+	spec := QueueDeclareSpec{
 		name,
 		durable,
 		autoDelete,
