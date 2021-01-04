@@ -42,7 +42,7 @@ channel.Publish(
 )
 ```
 
-# Usage with builder
+# Usage with builder(experimental - use at your own risk)
 It's cumbersome to keep track about all the paramters especially when multiple boolean flags are used. Therefor we added a small implementation using the builder pattern.
 
 ```
