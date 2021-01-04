@@ -8,7 +8,7 @@ import (
 var Defaults = chamqp.ExchangeDeclareSpec{
 	Name:       "",
 	Kind:       "topic",
-	Durable:    false,
+	Durable:    true,
 	AutoDelete: false,
 	Internal:   false,
 	NoWait:     false,

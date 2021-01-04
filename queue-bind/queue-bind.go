@@ -10,7 +10,7 @@ var Defaults = chamqp.QueueBindSpec{
 	Name:      "",
 	Key:       "",
 	Exchange:  "",
-	NoWait:    true,
+	NoWait:    false,
 	Args:      nil,
 	ErrorChan: nil,
 }

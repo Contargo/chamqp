@@ -34,7 +34,7 @@ func TestWithDefaults(t *testing.T) {
 			Name:      "test",
 			Key:       "routing",
 			Exchange:  "exchangeName",
-			NoWait:    true,
+			NoWait:    false,
 			Args:      nil,
 			ErrorChan: nil,
 		}
