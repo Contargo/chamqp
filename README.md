@@ -5,11 +5,6 @@ Chamqp
 # Features
 Chamqp is a small layer above github.com/streadway/amqp featuring auto-reconnect and limited exponential back-off. This is especially useful when running multiple services and network disconnect will happen sooner or later in production.
 
-## Examples
-
-# Plans for the future
-The API for creating exchanges is overloaded with (still important parameters). A builder pattern will be provided later for easier handling. Also we plan to add at least some integration tests.
-
 # Getting started
 
 Simply run in your project
@@ -42,7 +37,10 @@ channel.Publish(
 )
 ```
 
-# Usage with builder(experimental - use at your own risk)
+# Usage with builder
+
+Experimental - use at your own risk
+
 It's cumbersome to keep track about all the paramters especially when multiple boolean flags are used. Therefor we added a small implementation using the builder pattern.
 
 ```
