@@ -86,6 +86,10 @@ func (e ErrorChanDecl) BuildSpec() chamqp.QueueBindSpec {
 	return e.nameDecl.queueBindSpec
 }
 
+func (e ErrorChanDecl) Build(channel *chamqp.Channel) {
+	channel.QueueBindWithSpec(e.nameDecl.queueBindSpec)
+}
+
 func (e ErrorChanDecl) AndConsume() consume.QueueDecl {
 	return consume.Consume(e.nameDecl.queueBindSpec.Name)
 }
