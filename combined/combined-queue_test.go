@@ -10,7 +10,7 @@ func TestCombined(t *testing.T) {
 		queue_declaration.
 			DeclareQueue("MySuperQueue").	Defaults().
 			AndBind().
-			WitRoutinghKey("myroutingKey").
+			WithRoutinghKey("myroutingKey").
 			WithExchangeDecl("myExchange").	Defaults().
 			AndConsume().
 			WithDeliveryChan(nil).Defaults().

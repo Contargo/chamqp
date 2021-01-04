@@ -25,7 +25,7 @@ type NameDecl struct {
 	queueBindSpec chamqp.QueueBindSpec
 }
 
-func (n NameDecl) WitRoutinghKey(routingKey string) KeyDecl {
+func (n NameDecl) WithRoutinghKey(routingKey string) KeyDecl {
 	n.queueBindSpec.Key = routingKey
 	return KeyDecl{n}
 }
