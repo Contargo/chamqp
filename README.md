@@ -17,7 +17,7 @@ Simply run in your project
 $ go get github.com/Contargo/chamqp 
 ```
 
-# Using
+# Usage - classic way
 Chamqp is built with the intention to be compatible to the underlying github.com/streadway/amqp package. 
 This means instead of amqp.Dial() you have to use chamqp.Dial(). On the connection itself you then can use .Channel(). 
 Declaring queues or exchanges is done in the same fashion as with streadway's amqp package.
@@ -41,6 +41,36 @@ channel.Publish(
     },
 )
 ```
+
+# Usage with builder
+It's cumbersome to keep track about all the paramters especially when multiple boolean flags are used. Therefor we added a small implementation using the builder pattern.
+
+```
+BindQueue("testqueue").
+    WithRoutinghKey("routingKey").
+    WithExchangeDecl("exchange").
+    WithNoWaitDecl(false).
+    WithArgs(nil).
+    WithErrorChannel(nil).
+    Build(channel)
+```
+
+You can also use default values so you don't have to type everything:
+
+```
+BindQueue("test").
+    WithRoutinghKey("routing").
+    WithExchangeDecl("exchangeName").
+    Defaults().
+    BuildSpec()
+```
+
+For further samples have a look at the _test.go files
+
+Defaults are held in a public accessible variable:
+* queue_bind.Defaults
+* exchange-declare.Defaults
+* consume.Defaults
 
 # Getting started for development
 
