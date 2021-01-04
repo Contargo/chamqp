@@ -17,6 +17,31 @@ Simply run in your project
 $ go get github.com/Contargo/chamqp 
 ```
 
+# Using
+Chamqp is built with the intention to be compatible to the underlying github.com/streadway/amqp package. 
+This means instead of amqp.Dial() you have to use chamqp.Dial(). On the connection itself you then can use .Channel(). 
+Declaring queues or exchanges is done in the same fashion as with streadway's amqp package.
+
+
+See the following example to ilustrate it:
+```
+conn, err := chamqp.Dial(applicatonConfig.AMQPUrl)
+channel := conn.Channel()
+channel.ExchangeDeclare("exchangeName", "topic", false, false, false, false, nil, errChan)
+... 
+
+channel.Publish(
+    "exchangeName,
+    "routing.key",
+    false,
+    false,
+    amqp.Publishing{
+        ContentType: "contentType",
+        Body: "payload",
+    },
+)
+```
+
 # Getting started for development
 
 Simply clone this repository
