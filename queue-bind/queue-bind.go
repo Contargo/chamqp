@@ -34,7 +34,7 @@ type KeyDecl struct {
 	nameDecl NameDecl
 }
 
-func (k KeyDecl) WithExchangeDecl(exchangeName string) ExchangeDecl {
+func (k KeyDecl) WithExchange(exchangeName string) ExchangeDecl {
 	k.nameDecl.queueBindSpec.Exchange = exchangeName
 	return ExchangeDecl{k.nameDecl}
 }
@@ -47,7 +47,7 @@ func (e ExchangeDecl) Defaults() ErrorChanDecl {
 	return ErrorChanDecl{e.nameDecl}
 }
 
-func (e ExchangeDecl) WithNoWaitDecl(noWait bool) NoWaitDecl {
+func (e ExchangeDecl) WithNoWait(noWait bool) NoWaitDecl {
 	e.nameDecl.queueBindSpec.NoWait = noWait
 	return NoWaitDecl{e.nameDecl}
 }
