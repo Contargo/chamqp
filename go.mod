@@ -1,4 +1,4 @@
-module gitlab.contargo.net/karrei/chamqp
+module github.com/Contargo/chamqp
 
 go 1.15
 

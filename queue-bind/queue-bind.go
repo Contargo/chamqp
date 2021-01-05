@@ -1,9 +1,9 @@
 package queue_bind
 
 import (
+	"github.com/Contargo/chamqp"
+	"github.com/Contargo/chamqp/consume"
 	"github.com/streadway/amqp"
-	"gitlab.contargo.net/karrei/chamqp"
-	"gitlab.contargo.net/karrei/chamqp/consume"
 )
 
 var Defaults = chamqp.QueueBindSpec{

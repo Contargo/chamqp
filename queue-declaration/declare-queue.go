@@ -1,9 +1,9 @@
 package queue_declaration
 
 import (
+	"github.com/Contargo/chamqp"
+	"github.com/Contargo/chamqp/queue-bind"
 	"github.com/streadway/amqp"
-	"gitlab.contargo.net/karrei/chamqp"
-	"gitlab.contargo.net/karrei/chamqp/queue-bind"
 )
 
 var defaults = chamqp.QueueDeclareSpec{

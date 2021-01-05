@@ -1,8 +1,8 @@
 package exchange_declare
 
 import (
+	"github.com/Contargo/chamqp"
 	"github.com/streadway/amqp"
-	"gitlab.contargo.net/karrei/chamqp"
 )
 
 var Defaults = chamqp.ExchangeDeclareSpec{

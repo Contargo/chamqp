@@ -1,8 +1,8 @@
 package consume
 
 import (
+	"github.com/Contargo/chamqp"
 	"github.com/streadway/amqp"
-	"gitlab.contargo.net/karrei/chamqp"
 )
 
 var Defaults = chamqp.ConsumeSpec{

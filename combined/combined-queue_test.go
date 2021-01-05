@@ -1,7 +1,7 @@
 package combined
 
 import (
-	"gitlab.contargo.net/karrei/chamqp/queue-declaration"
+	"github.com/Contargo/chamqp/queue-declaration"
 	"testing"
 )
 

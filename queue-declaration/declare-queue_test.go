@@ -1,9 +1,9 @@
 package queue_declaration
 
 import (
+	"github.com/Contargo/chamqp"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
-	"gitlab.contargo.net/karrei/chamqp"
 	"testing"
 )
 

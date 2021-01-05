@@ -1,8 +1,8 @@
 package queue_bind
 
 import (
+	"github.com/Contargo/chamqp"
 	"github.com/stretchr/testify/assert"
-	"gitlab.contargo.net/karrei/chamqp"
 	"testing"
 )
 
