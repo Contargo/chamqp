@@ -97,7 +97,7 @@ func (e ExclusiveDecl) WithNoLocal(noLocal bool) NoLocalDecl {
 	return NoLocalDecl{e.queueDecl}
 }
 
-func (e ExclusiveDecl) WithDefaultNoLocal() NoWaitDecl {
+func (e ExclusiveDecl) WithDefaultNoLocal() NoLocalDecl {
 	return NoLocalDecl{e.queueDecl}
 }
 
