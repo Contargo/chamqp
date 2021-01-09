@@ -29,6 +29,7 @@ type QueueDecl struct {
 }
 
 func (q QueueDecl) WithDeliveryChan(deliveryChan chan amqp.Delivery) DeliveryChan {
+	q.consumeSpec.DeliveryChan = deliveryChan
 	return DeliveryChan{q}
 }
 
@@ -45,12 +46,20 @@ func (d DeliveryChan) WithConsumer(consumer string) ConsumerDecl {
 	return ConsumerDecl{d.queueDecl}
 }
 
+func (d DeliveryChan) WithDefaultConsumer() ConsumerDecl {
+	return ConsumerDecl{d.queueDecl}
+}
+
 type ConsumerDecl struct {
 	queueDecl QueueDecl
 }
 
 func (d ConsumerDecl) WithAutoAck(autoAck bool) AutoAckDecl {
 	d.queueDecl.consumeSpec.AutoAck = autoAck
+	return AutoAckDecl{d.queueDecl}
+}
+
+func (d ConsumerDecl) WithDefaultAutoAck() AutoAckDecl {
 	return AutoAckDecl{d.queueDecl}
 }
 
@@ -71,6 +80,10 @@ func (a AutoAckDecl) WithExclusive(exclusive bool) ExclusiveDecl {
 	return ExclusiveDecl{a.queueDecl}
 }
 
+func (a AutoAckDecl) WithDefaultExclusive() ExclusiveDecl {
+	return ExclusiveDecl{a.queueDecl}
+}
+
 type ExclusiveDecl struct {
 	queueDecl QueueDecl
 }
@@ -81,6 +94,10 @@ func (e ExclusiveDecl) Defaults() ErrorChan {
 
 func (e ExclusiveDecl) WithNoLocal(noLocal bool) NoLocalDecl {
 	e.queueDecl.consumeSpec.NoLocal = noLocal
+	return NoLocalDecl{e.queueDecl}
+}
+
+func (e ExclusiveDecl) WithDefaultNoLocal() NoWaitDecl {
 	return NoLocalDecl{e.queueDecl}
 }
 
