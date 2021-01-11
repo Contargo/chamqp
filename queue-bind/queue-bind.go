@@ -21,34 +21,44 @@ func BindQueue(queueName string) NameDecl {
 	return NameDecl{bind}
 }
 
+func BindQueueWithExchange(queueName, exchange string) ExchangeDecl {
+	bind := Defaults
+	bind.Name = queueName
+	bind.Exchange = exchange
+	return ExchangeDecl{NameDecl{bind}}
+}
+
 type NameDecl struct {
 	queueBindSpec chamqp.QueueBindSpec
 }
-
-func (n NameDecl) WithRoutinghKey(routingKey string) KeyDecl {
-	n.queueBindSpec.Key = routingKey
-	return KeyDecl{n}
+func (n ExchangeDecl) WithRoutingKey(routingKey string) KeyDecl {
+	n.nameDecl.queueBindSpec.Key = routingKey
+	return KeyDecl{n.nameDecl}
 }
 
 type KeyDecl struct {
 	nameDecl NameDecl
 }
 
-func (k KeyDecl) WithExchange(exchangeName string) ExchangeDecl {
-	k.nameDecl.queueBindSpec.Exchange = exchangeName
-	return ExchangeDecl{k.nameDecl}
+func (k NameDecl) WithExchange(exchangeName string) ExchangeDecl {
+	k.queueBindSpec.Exchange = exchangeName
+	return ExchangeDecl{k}
 }
 
 type ExchangeDecl struct {
 	nameDecl NameDecl
 }
 
-func (e ExchangeDecl) Defaults() ErrorChanDecl {
+func (e KeyDecl) Defaults() ErrorChanDecl {
 	return ErrorChanDecl{e.nameDecl}
 }
 
-func (e ExchangeDecl) WithNoWait(noWait bool) NoWaitDecl {
+func (e KeyDecl) WithNoWait(noWait bool) NoWaitDecl {
 	e.nameDecl.queueBindSpec.NoWait = noWait
+	return NoWaitDecl{e.nameDecl}
+}
+
+func (e KeyDecl) WithDefaultNoWait() NoWaitDecl {
 	return NoWaitDecl{e.nameDecl}
 }
 
@@ -65,6 +75,10 @@ func (n NoWaitDecl) WithArgs(args amqp.Table) ArgsDecl {
 	return ArgsDecl{n.nameDecl}
 }
 
+func (n NoWaitDecl) WithDefaultArgs() ArgsDecl {
+	return ArgsDecl{n.nameDecl}
+}
+
 type ArgsDecl struct {
 	nameDecl NameDecl
 }
@@ -78,6 +92,10 @@ func (a ArgsDecl) WithErrorChannel(channel chan error) ErrorChanDecl {
 	return ErrorChanDecl{a.nameDecl}
 }
 
+func (a ArgsDecl) WithDefaultErrorChannel() ErrorChanDecl {
+	return ErrorChanDecl{a.nameDecl}
+}
+
 type ErrorChanDecl struct {
 	nameDecl NameDecl
 }
@@ -86,10 +104,15 @@ func (e ErrorChanDecl) BuildSpec() chamqp.QueueBindSpec {
 	return e.nameDecl.queueBindSpec
 }
 
-func (e ErrorChanDecl) Build(channel *chamqp.Channel) {
-	channel.QueueBindWithSpec(e.nameDecl.queueBindSpec)
+type ConsumeDecl struct {
+	nameDecl NameDecl
 }
 
-func (e ErrorChanDecl) AndConsume() consume.QueueDecl {
-	return consume.Consume(e.nameDecl.queueBindSpec.Name)
+func (e ErrorChanDecl) Build(channel *chamqp.Channel) ConsumeDecl {
+	channel.QueueBindWithSpec(e.nameDecl.queueBindSpec)
+	return ConsumeDecl{e.nameDecl}
+}
+
+func (c ConsumeDecl) AndConsume() consume.QueueDecl {
+	return consume.Consume(c.nameDecl.queueBindSpec.Name)
 }
