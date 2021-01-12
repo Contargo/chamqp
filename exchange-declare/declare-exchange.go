@@ -2,6 +2,7 @@ package exchange_declare
 
 import (
 	"github.com/Contargo/chamqp"
+	"github.com/Contargo/chamqp/queue-declaration"
 	"github.com/streadway/amqp"
 )
 
@@ -135,8 +136,17 @@ func (e End) BuildSpec() chamqp.ExchangeDeclareSpec {
 	return e.nameDecl.exchangeDeclarationSpec
 }
 
-func (e End) Build(ch *chamqp.Channel) {
+type BindDecl struct {
+	nameDecl NameDecl
+}
+
+func (e End) Build(ch *chamqp.Channel) BindDecl {
 	ch.ExchangeDeclareWithSpec(e.BuildSpec())
+	return BindDecl{e.nameDecl}
+}
+
+func (b BindDecl) AndDeclareQueue(queueName string) queue_declaration.NameDecl {
+	return queue_declaration.DeclareQueueWithChan(queueName, &b.nameDecl.exchangeDeclarationSpec.Name)
 }
 
 func DeclareExchange(exchangeName string) NameDecl {

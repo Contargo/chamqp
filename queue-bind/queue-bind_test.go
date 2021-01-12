@@ -18,8 +18,8 @@ func TestCustomDeclare(t *testing.T) {
 		}
 
 		r := BindQueue("testqueue").
-			WithRoutinghKey("routingKey").
 			WithExchange("exchange").
+			WithRoutingKey("routingKey").
 			WithNoWait(false).
 			WithArgs(nil).
 			WithErrorChannel(nil).
@@ -39,8 +39,8 @@ func TestWithDefaults(t *testing.T) {
 			ErrorChan: nil,
 		}
 		r := BindQueue("test").
-			WithRoutinghKey("routing").
 			WithExchange("exchangeName").
+			WithRoutingKey("routing").
 			Defaults().
 			BuildSpec()
 		assert.Equal(t, expectedSpec, r)
