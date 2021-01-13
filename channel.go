@@ -1,6 +1,7 @@
 package chamqp
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -179,6 +180,17 @@ func (ch *Channel) Publish(exchange, key string, mandatory, immediate bool, msg 
 	}
 
 	return ch.ch.Publish(exchange, key, mandatory, immediate, msg)
+}
+
+func (ch *Channel) PublishJSON(exchange, key string, mandatory, immediate bool, objectToBeSent interface{}) error {
+	payload, err := json.Marshal(objectToBeSent)
+	if err != nil {
+		return err
+	}
+	return ch.Publish(exchange, key, mandatory, immediate, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        payload,
+	})
 }
 
 func (ch *Channel) ExchangeDeclareWithSpec(spec ExchangeDeclareSpec) {
