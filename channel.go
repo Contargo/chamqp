@@ -9,17 +9,16 @@ import (
 )
 
 type ConsumeSpec struct {
-	Queue     string
-	Consumer  string
+	Queue        string
+	Consumer     string
 	DeliveryChan chan<- amqp.Delivery
-	
+
 	AutoAck   bool
 	Exclusive bool
 	NoLocal   bool
 	NoWait    bool
 	Args      amqp.Table
-	ErrorChan    chan<- error
-
+	ErrorChan chan<- error
 }
 
 type ExchangeDeclareSpec struct {
@@ -75,7 +74,7 @@ func (ch *Channel) connected(conn *amqp.Connection) error {
 		return err
 	}
 	ch.ch = channel
-	
+
 	for _, spec := range ch.exchangeDeclareSpecs {
 		err := ch.applyExchangeDeclareSpec(spec)
 		if err != nil {
@@ -84,19 +83,19 @@ func (ch *Channel) connected(conn *amqp.Connection) error {
 	}
 	for _, spec := range ch.queueDeclareSpecs {
 		err := ch.applyQueueDeclareSpec(spec)
-		if err != nil {	
+		if err != nil {
 			return err
 		}
 	}
 	for _, spec := range ch.queueBindSpecs {
 		err := ch.applyQueueBindSpec(spec)
-		if err != nil {	
+		if err != nil {
 			return err
 		}
 	}
 	for _, spec := range ch.consumeSpecs {
 		err := ch.applyConsumeSpec(spec)
-		if err != nil {	
+		if err != nil {
 			return err
 		}
 	}
@@ -110,8 +109,10 @@ func (ch *Channel) disconnected() {
 
 func (ch *Channel) applyExchangeDeclareSpec(spec ExchangeDeclareSpec) error {
 	err := ch.ch.ExchangeDeclare(spec.Name, spec.Kind, spec.Durable, spec.AutoDelete, spec.Internal, spec.NoWait, spec.Args)
-	if err != nil && spec.ErrorChan != nil {
-		spec.ErrorChan <- err
+	if err != nil {
+		if spec.ErrorChan != nil {
+			spec.ErrorChan <- err
+		}
 		return err
 	}
 	return nil
@@ -119,8 +120,10 @@ func (ch *Channel) applyExchangeDeclareSpec(spec ExchangeDeclareSpec) error {
 
 func (ch *Channel) applyQueueDeclareSpec(spec QueueDeclareSpec) error {
 	queue, err := ch.ch.QueueDeclare(spec.Name, spec.Durable, spec.AutoDelete, spec.Exclusive, spec.NoWait, spec.Args)
-	if err != nil && spec.ErrorChan != nil {
-		spec.ErrorChan <- err
+	if err != nil {
+		if spec.ErrorChan != nil {
+			spec.ErrorChan <- err
+		}
 		return err
 	}
 	if spec.QueueChan != nil {
@@ -131,7 +134,10 @@ func (ch *Channel) applyQueueDeclareSpec(spec QueueDeclareSpec) error {
 
 func (ch *Channel) applyQueueBindSpec(spec QueueBindSpec) error {
 	err := ch.ch.QueueBind(spec.Name, spec.Key, spec.Exchange, spec.NoWait, spec.Args)
-	if err != nil && spec.ErrorChan != nil {
+	if err != nil {
+		if spec.ErrorChan != nil {
+			spec.ErrorChan <- err
+		}
 		spec.ErrorChan <- err
 		return err
 	}
@@ -140,8 +146,10 @@ func (ch *Channel) applyQueueBindSpec(spec QueueBindSpec) error {
 
 func (ch *Channel) applyConsumeSpec(spec ConsumeSpec) error {
 	deliveries, err := ch.ch.Consume(spec.Queue, spec.Consumer, spec.AutoAck, spec.Exclusive, spec.NoLocal, spec.NoWait, spec.Args)
-	if err != nil && spec.ErrorChan != nil {
-		spec.ErrorChan <- err
+	if err != nil {
+		if spec.ErrorChan != nil {
+			spec.ErrorChan <- err
+		}
 		return err
 	}
 	if spec.DeliveryChan != nil {
@@ -218,7 +226,7 @@ func (ch *Channel) ExchangeDeclare(name, kind string, durable, autoDelete, inter
 }
 
 func (ch *Channel) QueueBindWithSpec(q QueueBindSpec) {
-	ch.QueueBind(q.Name, q.Key, q.Exchange, q.NoWait, q.Args, q.ErrorChan)	
+	ch.QueueBind(q.Name, q.Key, q.Exchange, q.NoWait, q.Args, q.ErrorChan)
 }
 
 // QueueBind binds an Exchange to a Queue so that publishings to the Exchange
@@ -239,10 +247,10 @@ func (ch *Channel) QueueBind(name, key, exchange string, noWait bool, args amqp.
 	}
 }
 
-
 func (ch *Channel) QueueDeclareWithSpec(q QueueDeclareSpec) {
 	ch.QueueDeclare(q.Name, q.Durable, q.AutoDelete, q.Exclusive, q.NoWait, q.Args, q.QueueChan, q.ErrorChan)
 }
+
 // QueueDeclare declares a Queue to hold messages and deliver to consumers.
 // Declaring creates a Queue if it doesn't already exist, or ensures that an
 // existing Queue matches the same parameters.
