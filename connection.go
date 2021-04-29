@@ -43,8 +43,13 @@ func Dial(url string) *Connection {
 	return conn
 }
 
-func (c *Connection) DialBlocked(url string) error {
-	return c.connect(url)
+func DialBlocked(url string) (*Connection, error) {
+	conn := &Connection{
+		shutdownChan: make(chan struct{}),
+		doneChan:     make(chan struct{}),
+	}
+	err := conn.connect(url)
+	return conn, err
 }
 
 func (c *Connection) connect(url string) error {
