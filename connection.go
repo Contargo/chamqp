@@ -43,6 +43,10 @@ func Dial(url string) *Connection {
 	return conn
 }
 
+func (c *Connection) DialBlocked(url string) error {
+	return c.connect(url)
+}
+
 func (c *Connection) connect(url string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
