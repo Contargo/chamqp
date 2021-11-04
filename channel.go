@@ -2,8 +2,10 @@ package chamqp
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/streadway/amqp"
 )
@@ -199,6 +201,47 @@ func (ch *Channel) PublishJSON(exchange, key string, mandatory, immediate bool, 
 		ContentType: "application/json",
 		Body:        payload,
 	})
+}
+
+func (ch *Channel) PublishJsonAndWaitForResponse(replyQueueName, correlationId string, response, request interface{}, exchange, key string, mandatory, immediate bool, responseTimeout time.Duration) error {
+	replyQueue := make(chan amqp.Delivery)
+	ch.Consume(replyQueueName, "", true, false, false, false, nil, replyQueue, nil)
+
+	payload, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+
+	msg := amqp.Publishing{
+		Headers:       amqp.Table{},
+		ContentType:   "application/json",
+		ReplyTo:       replyQueueName,
+		CorrelationId: correlationId,
+		Body:          payload,
+	}
+	err = ch.Publish(exchange, key, mandatory, immediate, msg)
+	if err != nil {
+		return err
+	}
+
+	timer := time.NewTimer(responseTimeout)
+	for {
+		select {
+		case reply := <-replyQueue:
+			if correlationId != "" && reply.CorrelationId != correlationId {
+				fmt.Println("skipping, not for me")
+				continue
+			}
+			err := json.Unmarshal(reply.Body, response)
+			if err != nil {
+				continue
+			}
+
+			return err
+		case <-timer.C:
+			return errors.New("timed out")
+		}
+	}
 }
 
 func (ch *Channel) ExchangeDeclareWithSpec(spec ExchangeDeclareSpec) {
