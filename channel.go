@@ -204,8 +204,12 @@ func (ch *Channel) PublishJSON(exchange, key string, mandatory, immediate bool, 
 }
 
 func (ch *Channel) PublishJsonAndWaitForResponse(replyQueueName, correlationId string, response, request interface{}, exchange, key string, mandatory, immediate bool, responseTimeout time.Duration) error {
-	replyQueue := make(chan amqp.Delivery)
-	ch.Consume(replyQueueName, "", true, false, false, false, nil, replyQueue, nil)
+	defer ch.ch.Cancel(replyQueueName+".consumer", false)
+
+	replyQueue, err := ch.ch.Consume(replyQueueName, replyQueueName+".consumer", true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
 
 	payload, err := json.Marshal(request)
 	if err != nil {
@@ -236,7 +240,6 @@ func (ch *Channel) PublishJsonAndWaitForResponse(replyQueueName, correlationId s
 			if err != nil {
 				continue
 			}
-
 			return err
 		case <-timer.C:
 			return errors.New("timed out")
