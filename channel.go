@@ -204,8 +204,10 @@ func (ch *Channel) PublishJSON(exchange, key string, mandatory, immediate bool, 
 }
 
 func (ch *Channel) PublishJsonAndWaitForResponse(replyQueueName, correlationId string, response, request interface{}, exchange, key string, mandatory, immediate bool, responseTimeout time.Duration) error {
+	if ch.ch == nil {
+		return errors.New("channel not present")
+	}
 	defer ch.ch.Cancel(replyQueueName+".consumer", false)
-
 	replyQueue, err := ch.ch.Consume(replyQueueName, replyQueueName+".consumer", true, false, false, false, nil)
 	if err != nil {
 		return err
