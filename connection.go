@@ -83,6 +83,10 @@ func DialTLSBlocked(url string, config *tls.Config) (*Connection, error) {
 	return conn, err
 }
 
+func (c *Connection) ConnectionState() tls.ConnectionState {
+	return c.conn.ConnectionState()
+}
+
 func (c *Connection) connect(connector func() (*amqp.Connection, error)) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
