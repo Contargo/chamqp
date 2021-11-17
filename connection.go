@@ -1,6 +1,7 @@
 package chamqp
 
 import (
+	"crypto/tls"
 	"fmt"
 	"math"
 	"sync"
@@ -39,7 +40,22 @@ func Dial(url string) *Connection {
 		shutdownChan: make(chan struct{}),
 		doneChan:     make(chan struct{}),
 	}
-	go conn.supervise(url)
+	connector := func() (*amqp.Connection, error) {
+		return amqp.Dial(url)
+	}
+	go conn.supervise(connector)
+	return conn
+}
+
+func DialTLS(url string, config *tls.Config) *Connection {
+	conn := &Connection{
+		shutdownChan: make(chan struct{}),
+		doneChan:     make(chan struct{}),
+	}
+	connector := func() (*amqp.Connection, error) {
+		return amqp.DialTLS(url, config)
+	}
+	go conn.supervise(connector)
 	return conn
 }
 
@@ -48,19 +64,33 @@ func DialBlocked(url string) (*Connection, error) {
 		shutdownChan: make(chan struct{}),
 		doneChan:     make(chan struct{}),
 	}
-	err := conn.connect(url)
+	connector := func() (*amqp.Connection, error) {
+		return amqp.Dial(url)
+	}
+	err := conn.connect(connector)
 	return conn, err
 }
 
-func (c *Connection) connect(url string) error {
+func DialTLSBlocked(url string, config *tls.Config) (*Connection, error) {
+	conn := &Connection{
+		shutdownChan: make(chan struct{}),
+		doneChan:     make(chan struct{}),
+	}
+	connector := func() (*amqp.Connection, error) {
+		return amqp.DialTLS(url, config)
+	}
+	err := conn.connect(connector)
+	return conn, err
+}
+
+func (c *Connection) connect(connector func() (*amqp.Connection, error)) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	conn, err := amqp.Dial(url)
+	conn, err := connector()
 	if err != nil {
 		return err
 	}
-	
 
 	for _, ctx := range c.channels {
 		chanErr := ctx.connected(conn)
@@ -71,7 +101,7 @@ func (c *Connection) connect(url string) error {
 	}
 
 	c.conn = conn
-	
+
 	return nil
 }
 
@@ -92,7 +122,7 @@ func (c *Connection) disconnect(err error) {
 	}
 }
 
-func (c *Connection) supervise(url string) {
+func (c *Connection) supervise(connector func() (*amqp.Connection, error)) {
 	var attempt float64
 
 	defer close(c.doneChan)
@@ -103,7 +133,7 @@ func (c *Connection) supervise(url string) {
 			backoffDelay = maxInterval
 		}
 
-		err := c.connect(url)
+		err := c.connect(connector)
 		if err != nil {
 			for _, c := range c.errorChans {
 				c <- err
