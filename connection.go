@@ -36,10 +36,7 @@ type Connection struct {
 //
 // Use `NotifyError` to register a receiver for errors on the connection.
 func Dial(url string) *Connection {
-	conn := &Connection{
-		shutdownChan: make(chan struct{}),
-		doneChan:     make(chan struct{}),
-	}
+	conn := defaultConnection()
 	connector := func() (*amqp.Connection, error) {
 		return amqp.Dial(url)
 	}
@@ -48,10 +45,7 @@ func Dial(url string) *Connection {
 }
 
 func DialTLS(url string, config *tls.Config) *Connection {
-	conn := &Connection{
-		shutdownChan: make(chan struct{}),
-		doneChan:     make(chan struct{}),
-	}
+	conn := defaultConnection()
 	connector := func() (*amqp.Connection, error) {
 		return amqp.DialTLS(url, config)
 	}
@@ -60,10 +54,7 @@ func DialTLS(url string, config *tls.Config) *Connection {
 }
 
 func DialBlocked(url string) (*Connection, error) {
-	conn := &Connection{
-		shutdownChan: make(chan struct{}),
-		doneChan:     make(chan struct{}),
-	}
+	conn := defaultConnection()
 	connector := func() (*amqp.Connection, error) {
 		return amqp.Dial(url)
 	}
@@ -72,15 +63,19 @@ func DialBlocked(url string) (*Connection, error) {
 }
 
 func DialTLSBlocked(url string, config *tls.Config) (*Connection, error) {
-	conn := &Connection{
-		shutdownChan: make(chan struct{}),
-		doneChan:     make(chan struct{}),
-	}
+	conn := defaultConnection()
 	connector := func() (*amqp.Connection, error) {
 		return amqp.DialTLS(url, config)
 	}
 	err := conn.connect(connector)
 	return conn, err
+}
+
+func defaultConnection() *Connection {
+	return &Connection{
+		shutdownChan: make(chan struct{}),
+		doneChan:     make(chan struct{}),
+	}
 }
 
 func (c *Connection) ConnectionState() tls.ConnectionState {
