@@ -57,6 +57,21 @@ type QueueDeclareSpec struct {
 	ErrorChan chan<- error
 }
 
+type Properties struct {
+	ContentType     string    // MIME content type
+	ContentEncoding string    // MIME content encoding
+	DeliveryMode    uint8     // Transient (0 or 1) or Persistent (2)
+	Priority        uint8     // 0 to 9
+	CorrelationId   string    // correlation identifier
+	ReplyTo         string    // address to to reply to (ex: RPC)
+	Expiration      string    // message expiration spec
+	MessageId       string    // message identifier
+	Timestamp       time.Time // message timestamp
+	Type            string    // message type name
+	UserId          string    // creating user id - ex: "guest"
+	AppId           string    // creating application id
+}
+
 // Channel represents an AMQP channel. Used as a context for valid message
 // Exchange. Errors on methods with this Channel will be detected and the
 // channel will recreate itself.
@@ -190,6 +205,29 @@ func (ch *Channel) Publish(exchange, key string, mandatory, immediate bool, msg 
 	}
 
 	return ch.ch.Publish(exchange, key, mandatory, immediate, msg)
+}
+
+func (ch *Channel) PublishJSONWithProperties(exchange, key string, mandatory, immediate bool, objectToBeSent interface{}, properties Properties) error {
+	payload, err := json.Marshal(objectToBeSent)
+	if err != nil {
+		return err
+	}
+	return ch.Publish(exchange, key, mandatory, immediate, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        payload,
+
+		ContentEncoding: properties.ContentEncoding,
+		DeliveryMode:    properties.DeliveryMode,
+		Priority:        properties.Priority,
+		CorrelationId:   properties.CorrelationId,
+		ReplyTo:         properties.ReplyTo,
+		Expiration:      properties.Expiration,
+		MessageId:       properties.MessageId,
+		Timestamp:       properties.Timestamp,
+		Type:            properties.Type,
+		UserId:          properties.UserId,
+		AppId:           properties.AppId,
+	})
 }
 
 func (ch *Channel) PublishJSON(exchange, key string, mandatory, immediate bool, objectToBeSent interface{}) error {
