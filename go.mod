@@ -1,6 +1,6 @@
 module github.com/Contargo/chamqp
 
-go 1.15
+go 1.19
 
 require (
 	github.com/streadway/amqp v1.0.0
