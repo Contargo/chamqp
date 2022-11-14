@@ -3,7 +3,7 @@ package exchange_declare
 import (
 	"github.com/Contargo/chamqp"
 	"github.com/Contargo/chamqp/queue-declaration"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var Defaults = chamqp.ExchangeDeclareSpec{
@@ -65,7 +65,7 @@ func (a AutoDeleteDecl) WithDefaultAutoDelete() InternalDecl {
 }
 
 func (a AutoDeleteDecl) Defaults() End {
-	return End{a.nameDecl}	
+	return End{a.nameDecl}
 }
 
 type InternalDecl struct {

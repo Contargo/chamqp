@@ -2,7 +2,7 @@ package consume
 
 import (
 	"github.com/Contargo/chamqp"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var Defaults = chamqp.ConsumeSpec{
