@@ -4,11 +4,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
 	"github.com/streadway/amqp"
 )
+
+type NotifyPublishSpec struct {
+	confirm chan amqp.Confirmation
+}
 
 type ConsumeSpec struct {
 	Queue        string
@@ -81,11 +86,18 @@ type Channel struct {
 	exchangeDeclareSpecs []ExchangeDeclareSpec
 	queueBindSpecs       []QueueBindSpec
 	queueDeclareSpecs    []QueueDeclareSpec
+	notifyPublishSpec    []NotifyPublishSpec
 	mu                   sync.Mutex
+	confirm              bool
+	confirmNoWait        bool
 }
 
 func (ch *Channel) connected(conn *amqp.Connection) error {
+	log.Println("connected")
 	channel, err := conn.Channel()
+	if ch.confirm {
+		channel.Confirm(ch.confirmNoWait)
+	}
 	if err != nil {
 		ch.ch = nil
 		return err
@@ -115,6 +127,9 @@ func (ch *Channel) connected(conn *amqp.Connection) error {
 		if err != nil {
 			return err
 		}
+	}
+	for _, spec := range ch.notifyPublishSpec {
+		ch.applyNotifyPublishSpec(spec)
 	}
 
 	return nil
@@ -173,6 +188,12 @@ func (ch *Channel) applyConsumeSpec(spec ConsumeSpec) error {
 		go shovel(deliveries, spec.DeliveryChan)
 	}
 	return nil
+}
+
+func (ch *Channel) applyNotifyPublishSpec(spec NotifyPublishSpec) {
+	subscribeChannel := make(chan amqp.Confirmation, 1)
+	go shovelConfirmation(subscribeChannel, spec.confirm)
+	ch.ch.NotifyPublish(subscribeChannel)
 }
 
 func (ch *Channel) ConsumeWithSpec(spec ConsumeSpec) {
@@ -357,8 +378,24 @@ func (ch *Channel) QueueDeclare(name string, durable, autoDelete, exclusive, noW
 	}
 }
 
+func (c *Channel) NotifyPublish() chan amqp.Confirmation {
+	notifyPublishChan := make(chan amqp.Confirmation, 1)
+	spec := NotifyPublishSpec{notifyPublishChan}
+	c.notifyPublishSpec = append(c.notifyPublishSpec, spec)
+	if c.ch != nil {
+		c.applyNotifyPublishSpec(spec)
+	}
+	return notifyPublishChan
+}
+
 // Shovel takes messages from `src` and puts them into `dest`.
 func shovel(src <-chan amqp.Delivery, dest chan<- amqp.Delivery) {
+	for msg := range src {
+		dest <- msg
+	}
+}
+
+func shovelConfirmation(src, dest chan amqp.Confirmation) {
 	for msg := range src {
 		dest <- msg
 	}

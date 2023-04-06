@@ -193,6 +193,22 @@ func (c *Connection) Channel() *Channel {
 	return ch
 }
 
+func (c *Connection) ChannelWithConfirm(noWait bool) *Channel {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	ch := &Channel{}
+	ch.confirm = true
+	ch.confirmNoWait = noWait
+	c.channels = append(c.channels, ch)
+
+	if c.conn != nil {
+		ch.connected(c.conn)
+	}
+
+	return ch
+}
+
 // Close requests and waits for the response to close the AMQP connection.
 func (c *Connection) Close() error {
 	c.mu.Lock()
