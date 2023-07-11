@@ -229,6 +229,10 @@ func (ch *Channel) Publish(exchange, key string, mandatory, immediate bool, msg 
 }
 
 func (ch *Channel) PublishJSONWithProperties(exchange, key string, mandatory, immediate bool, objectToBeSent interface{}, properties Properties) error {
+	if ch.ch == nil {
+		return fmt.Errorf("context has no channel")
+	}
+
 	payload, err := json.Marshal(objectToBeSent)
 	if err != nil {
 		return err
@@ -252,6 +256,10 @@ func (ch *Channel) PublishJSONWithProperties(exchange, key string, mandatory, im
 }
 
 func (ch *Channel) PublishJSON(exchange, key string, mandatory, immediate bool, objectToBeSent interface{}) error {
+	if ch.ch == nil {
+		return fmt.Errorf("context has no channel")
+	}
+
 	payload, err := json.Marshal(objectToBeSent)
 	if err != nil {
 		return err
