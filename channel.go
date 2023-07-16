@@ -68,7 +68,7 @@ type Properties struct {
 	DeliveryMode    uint8     // Transient (0 or 1) or Persistent (2)
 	Priority        uint8     // 0 to 9
 	CorrelationId   string    // correlation identifier
-	ReplyTo         string    // address to to reply to (ex: RPC)
+	ReplyTo         string    // address to reply to (ex: RPC)
 	Expiration      string    // message expiration spec
 	MessageId       string    // message identifier
 	Timestamp       time.Time // message timestamp
@@ -386,12 +386,12 @@ func (ch *Channel) QueueDeclare(name string, durable, autoDelete, exclusive, noW
 	}
 }
 
-func (c *Channel) NotifyPublish() chan amqp.Confirmation {
+func (ch *Channel) NotifyPublish() chan amqp.Confirmation {
 	notifyPublishChan := make(chan amqp.Confirmation, 1)
 	spec := NotifyPublishSpec{notifyPublishChan}
-	c.notifyPublishSpec = append(c.notifyPublishSpec, spec)
-	if c.ch != nil {
-		c.applyNotifyPublishSpec(spec)
+	ch.notifyPublishSpec = append(ch.notifyPublishSpec, spec)
+	if ch.ch != nil {
+		ch.applyNotifyPublishSpec(spec)
 	}
 	return notifyPublishChan
 }
