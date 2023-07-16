@@ -3,7 +3,7 @@ module github.com/Contargo/chamqp
 go 1.19
 
 require (
-	github.com/rabbitmq/amqp091-go v1.5.0
+	github.com/rabbitmq/amqp091-go v1.8.1
 	github.com/stretchr/testify v1.8.1
 )
 
