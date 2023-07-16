@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -93,7 +92,6 @@ type Channel struct {
 }
 
 func (ch *Channel) connected(conn *amqp.Connection) error {
-	log.Println("connected")
 	channel, err := conn.Channel()
 	if ch.confirm {
 		channel.Confirm(ch.confirmNoWait)
