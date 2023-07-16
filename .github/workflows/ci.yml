@@ -3,9 +3,9 @@ name: Build & Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   # Allow this workflow be reused (for example in the release pipeline)
   workflow_call:
 
