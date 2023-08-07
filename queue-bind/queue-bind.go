@@ -3,7 +3,7 @@ package queue_bind
 import (
 	"github.com/Contargo/chamqp"
 	"github.com/Contargo/chamqp/consume"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var Defaults = chamqp.QueueBindSpec{
@@ -31,6 +31,7 @@ func BindQueueWithExchange(queueName, exchange string) ExchangeDecl {
 type NameDecl struct {
 	queueBindSpec chamqp.QueueBindSpec
 }
+
 func (n ExchangeDecl) WithRoutingKey(routingKey string) KeyDecl {
 	n.nameDecl.queueBindSpec.Key = routingKey
 	return KeyDecl{n.nameDecl}

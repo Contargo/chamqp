@@ -3,22 +3,22 @@
 
 ## Features
 
-Chamqp is a small layer above `github.com/streadway/amqp` featuring auto-reconnect using exponential back-off with an upper bound. This is especially useful when running multiple services and network disconnect will happen sooner or later in production.
+Chamqp is a small layer above [rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) featuring auto-reconnect using exponential back-off with an upper bound. This is especially useful when running multiple services and network disconnect will happen sooner or later in production.
 
 
 ## Getting started
 
 Simply run in your project
 ```sh
-$ go get github.com/Contargo/chamqp 
+$ go get github.com/Contargo/chamqp
 ```
 
 
 ## Usage - classic way
 
-Chamqp is built with the intention to be compatible to the underlying `github.com/streadway/amqp` package. 
-This means instead of `amqp.Dial()` you have to use `chamqp.Dial()`. On the connection itself you then can use `.Channel()`. 
-Declaring queues or exchanges is done in the same fashion as with `streadway`'s `amqp` package.
+Chamqp is built with the intention to be compatible to the underlying [rabbitmq/amqp091-go](https://github.com/rabbitmq/amqp091-go) package.
+This means instead of `amqp.Dial()` you have to use `chamqp.Dial()`. On the connection itself you then can use `.Channel()`.
+Declaring queues or exchanges is done in the same fashion as with the `amqp091-go` package.
 
 See the following example to illustrate it:
 
@@ -26,7 +26,7 @@ See the following example to illustrate it:
 conn, err := chamqp.Dial(applicatonConfig.AMQPUrl)
 channel := conn.Channel()
 channel.ExchangeDeclare("exchangeName", "topic", false, false, false, false, nil, errChan)
-... 
+...
 
 channel.Publish(
     "exchangeName,

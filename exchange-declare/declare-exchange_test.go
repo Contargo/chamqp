@@ -2,7 +2,7 @@ package exchange_declare
 
 import (
 	"github.com/Contargo/chamqp"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -39,15 +39,15 @@ func TestWithCertainDefaults(t *testing.T) {
 			Defaults().
 			BuildSpec()
 	})
-	
+
 	t.Run("custom Exchange, Kind, default Durable", func(t *testing.T) {
 		DeclareExchange("testme").
 			WithKind("fan").
 			WithDefaultDurable().
 			Defaults().
-		BuildSpec()
+			BuildSpec()
 	})
-	
+
 	t.Run("custom Exchange, Kind, Durable, default autodelete", func(t *testing.T) {
 		DeclareExchange("testme").
 			WithKind("fan").
@@ -56,7 +56,7 @@ func TestWithCertainDefaults(t *testing.T) {
 			Defaults().
 			BuildSpec()
 	})
-	
+
 	t.Run("custom Exchange, Kind, Durable, autodelete, default Internal", func(t *testing.T) {
 		DeclareExchange("testme").
 			WithKind("fan").
@@ -89,7 +89,7 @@ func TestWithAllDefaults(t *testing.T) {
 		expectedSpec := Defaults
 		expectedSpec.Name = "custom"
 		expectedSpec.Kind = "asdf"
-		
+
 		r := DeclareExchange("custom").
 			WithKind("asdf").
 			Defaults().
@@ -117,7 +117,7 @@ func TestWithAllDefaults(t *testing.T) {
 		expectedSpec.Kind = "asdf"
 		expectedSpec.Durable = true
 		expectedSpec.AutoDelete = false
-		
+
 		r := DeclareExchange("testme").
 			WithKind("asdf").
 			WithDurable(true).
@@ -153,7 +153,7 @@ func TestWithAllDefaults(t *testing.T) {
 		expectedSpec.Internal = true
 		expectedSpec.NoWait = true
 
-		r:= DeclareExchange("testme").
+		r := DeclareExchange("testme").
 			WithKind("asdf").
 			WithDurable(true).
 			WithAutoDelete(false).
@@ -172,7 +172,7 @@ func TestWithAllDefaults(t *testing.T) {
 		expectedSpec.Internal = true
 		expectedSpec.NoWait = true
 		expectedSpec.Args = amqp.Table{}
-		
+
 		r := DeclareExchange("testme").
 			WithKind("asdf").
 			WithDurable(true).

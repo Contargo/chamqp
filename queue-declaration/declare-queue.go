@@ -3,18 +3,18 @@ package queue_declaration
 import (
 	"github.com/Contargo/chamqp"
 	"github.com/Contargo/chamqp/queue-bind"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var defaults = chamqp.QueueDeclareSpec{
-	Name: "",
-	Durable: false,
+	Name:       "",
+	Durable:    false,
 	AutoDelete: true,
-	Exclusive: false,
-	NoWait: false,
-	Args: amqp.Table{},
-	QueueChan: nil,
-	ErrorChan: nil,
+	Exclusive:  false,
+	NoWait:     false,
+	Args:       amqp.Table{},
+	QueueChan:  nil,
+	ErrorChan:  nil,
 }
 
 func DeclareQueue(name string) NameDecl {
@@ -24,11 +24,11 @@ func DeclareQueue(name string) NameDecl {
 func DeclareQueueWithChan(name string, exchangeName *string) NameDecl {
 	queueDecl := defaults
 	queueDecl.Name = name
-	return NameDecl{queueDecl,  exchangeName}
+	return NameDecl{queueDecl, exchangeName}
 }
 
 type NameDecl struct {
-	queueDecl chamqp.QueueDeclareSpec
+	queueDecl    chamqp.QueueDeclareSpec
 	exchangeName *string
 }
 
@@ -151,7 +151,7 @@ type End struct {
 	nameDecl NameDecl
 }
 
-func (e End) BuildSpec() chamqp.QueueDeclareSpec{
+func (e End) BuildSpec() chamqp.QueueDeclareSpec {
 	return e.nameDecl.queueDecl
 }
 
