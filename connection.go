@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"math"
+	"os"
 	"sync"
 	"time"
 
@@ -11,9 +12,11 @@ import (
 )
 
 const (
-	initialInterval = 1 * time.Second
-	maxInterval     = 10 * time.Second
-	multiplier      = float64(2)
+	initialInterval      = 1 * time.Second
+	maxInterval          = 10 * time.Second
+	multiplier           = float64(2)
+	maxAttemps           = 10
+	AllowSelfTermination = true
 )
 
 // Connection manages the serialization and deserialization of frames from IO
@@ -143,6 +146,10 @@ func (c *Connection) supervise(connector func() (*amqp.Connection, error)) {
 				c <- err
 			}
 			attempt++
+			if AllowSelfTermination && attempt >= maxAttemps {
+				fmt.Println("Too many errors, killing process")
+				os.Exit(1)
+			}
 			select {
 			case <-time.After(backoffDelay):
 				continue
