@@ -142,6 +142,7 @@ func (c *Connection) supervise(connector func() (*amqp.Connection, error)) {
 
 		err := c.connect(connector)
 		if err != nil {
+			fmt.Println("Attempt is", attempt, "back off delay", backoffDelay)
 			for _, c := range c.errorChans {
 				c <- err
 			}
