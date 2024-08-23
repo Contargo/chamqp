@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -86,7 +85,6 @@ type Channel struct {
 	queueBindSpecs       []QueueBindSpec
 	queueDeclareSpecs    []QueueDeclareSpec
 	notifyPublishSpec    []NotifyPublishSpec
-	mu                   sync.Mutex
 	confirm              bool
 	confirmNoWait        bool
 }

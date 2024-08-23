@@ -1,0 +1,10 @@
+---
+linters:
+  disable:
+    - errcheck # too many false positives for now
+
+linters-settings:
+  gosimple:
+    checks:
+      - all
+      - '-S1016'  # type conversions invalid?

@@ -186,6 +186,8 @@ func (c *Connection) NotifyError(receiver chan error) chan error {
 // Channel opens a unique, concurrent server channel to process the bulk of AMQP
 // messages. Any error from methods on this receiver will cause the Channel to
 // recreate itself.
+// Note that a channel should not be used from multiple goroutines as it is not
+// thread safe.
 func (c *Connection) Channel() *Channel {
 	c.mu.Lock()
 	defer c.mu.Unlock()
