@@ -36,26 +36,31 @@ func (h *HeartbeatSender[T]) StartSending() {
 func (h *HeartbeatSender[T]) StartSendingWithParams(durable, autodelete, internal, nowait bool) {
 	interval, err := daemon.SdWatchdogEnabled(false)
 	if err != nil || interval == 0 {
-		interval = 50 * time.Second
+		log.Println("no interval found, defaulting")
+		interval = 50 * time.Second * 20 
 	}
 
 	h.chamqpChannel.ExchangeDeclare(h.exchangeName, "topic", durable, autodelete, internal, nowait, nil, nil)
 	for {
 		heartbeatObj := h.heartbeatContentGatherer.GetHeartbeatContent()
+
 		err := h.chamqpChannel.PublishJSONWithProperties(h.exchangeName, h.routingKey, false, false, heartbeatObj, chamqp.Properties{
 			Expiration: strconv.Itoa(2 * 60 * 1000),
 		})
 		if err == nil {
+			log.Println("published heartbeat", heartbeatObj)
 			notificationSupported, err := daemon.SdNotify(false, daemon.SdNotifyWatchdog)
 			if !notificationSupported {
 				log.Println("Systemd watchdog notification not supported")
 			} else {
 				if err != nil {
 					log.Println("err during sending out systemd notificaiton", err)
+				} else {
+					log.Println("Successfully watchdoged")
 				}
 			}
 		}
 
-		time.Sleep(interval)
+		time.Sleep(interval / 20)
 	}
 }
